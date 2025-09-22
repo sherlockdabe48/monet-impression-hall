@@ -18,8 +18,42 @@ exports.handler = async (event) => {
       return { statusCode: 500, headers, body: JSON.stringify({ error: 'Missing INSTAGRAM_ACCESS_TOKEN' }) };
     }
 
+    const qs = event.queryStringParameters || {};
+    const urlsParam = qs.urls || '';
+
+    if (urlsParam) {
+      const urls = urlsParam.split(',').map((u) => u.trim()).filter(Boolean);
+      const results = (await Promise.all(urls.map(async (u) => {
+        try {
+          const endpoint = new URL('https://graph.facebook.com/v19.0/instagram_oembed');
+          endpoint.searchParams.set('url', u);
+          endpoint.searchParams.set('access_token', accessToken);
+          endpoint.searchParams.set('omitscript', 'true');
+          endpoint.searchParams.set('hidecaption', 'true');
+          const resp = await fetch(endpoint.toString());
+          if (!resp.ok) return null;
+          const data = await resp.json();
+          const thumb = data.thumbnail_url || null;
+          return thumb ? {
+            id: data.media_id || u,
+            type: 'IMAGE',
+            src: thumb,
+            thumbnail: thumb,
+            permalink: data.author_url || u,
+            caption: data.title || '',
+            timestamp: null,
+            username: data.author_name || 'instagram',
+          } : null;
+        } catch (_) {
+          return null;
+        }
+      }))).filter(Boolean);
+
+      return { statusCode: 200, headers, body: JSON.stringify({ items: results }) };
+    }
+
     const url = new URL('https://graph.instagram.com/me/media');
-    const limit = Math.min(parseInt((event.queryStringParameters && event.queryStringParameters.limit) || '12', 10) || 12, 50);
+    const limit = Math.min(parseInt(qs.limit || '12', 10) || 12, 50);
     url.searchParams.set('fields', 'id,media_type,media_url,permalink,caption,thumbnail_url,timestamp,username');
     url.searchParams.set('access_token', accessToken);
     url.searchParams.set('limit', String(limit));

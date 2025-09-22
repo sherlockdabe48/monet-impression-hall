@@ -32,6 +32,31 @@ async function loadInstagramGallery() {
   }
 }
 
-if (document.getElementById('insta-grid')) {
+const igEl=document.getElementById('insta-grid');
+if (igEl) {
+  const urlsAttr = igEl.getAttribute('data-ig-urls');
+  if (urlsAttr && urlsAttr.trim()) {
+    const urls = urlsAttr.split(/\s+/).filter(Boolean);
+    loadInstagramSpecific(urls);
+  } else {
+    loadInstagramGallery();
+  }
+}
   loadInstagramGallery();
 }
+
+
+async function loadInstagramSpecific(urls){
+  try{
+    const q = encodeURIComponent(urls.join(","));
+    const r = await fetch(`/api/instagram?urls=${q}`);
+    if(!r.ok) return;
+    const { items } = await r.json();
+    const grid = document.getElementById("insta-grid");
+    if(!grid || !Array.isArray(items)) return;
+    const frag = document.createDocumentFragment();
+    items.forEach(it=>{
+      if(!it.thumbnail && !it.src) return;
+      const li = document.createElement("li");
+      const a = document.createElement("a");
+      a.href = it.permalink || 
