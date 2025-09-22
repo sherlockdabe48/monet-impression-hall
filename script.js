@@ -1,1 +1,1 @@
-document.addEventListener("DOMContentLoaded",()=>console.log("Monet Impression Hall"))
+404: Not Found

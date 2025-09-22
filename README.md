@@ -1,3 +1,1 @@
-# Monet Impression Hall
-
-Initial commit placeholder.
+404: Not Found
