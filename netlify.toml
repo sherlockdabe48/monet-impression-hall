@@ -1,0 +1,12 @@
+[build]
+  publish = "."
+  command = ""
+
+[functions]
+  directory = "netlify/functions"
+
+[[redirects]]
+  from = "/api/instagram"
+  to = "/.netlify/functions/instagram"
+  status = 200
+  force = true
